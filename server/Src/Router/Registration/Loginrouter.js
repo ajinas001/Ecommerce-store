@@ -1,10 +1,27 @@
-const express =require('express')
+const express = require('express')
 const bcrypt = require('bcryptjs');
 const Registermodel = require('../../model/Register/Registermodel');
+const jwt = require('jsonwebtoken');
+const Checkauth = require('../../middleware/Checkauth');
 
 const LoginRouter = express.Router()
 
+// const verification = (req,res,next)=>{
+//     const token = req.cookies.token
+//     console.log("token",token);
+// }
 
+LoginRouter.post('/verify', Checkauth, async (req, res) => {
+    const user = req.user
+    console.log(user, "decoded data");
+    return res.status(200).json({
+        success: true,
+        error: false,
+        data: user,
+        message: "authorized"
+    });
+
+})
 LoginRouter.post('/login', async (req, res) => {
     console.log(req.body);
     const { email, password } = req.body;
@@ -15,6 +32,8 @@ LoginRouter.post('/login', async (req, res) => {
         if (data) {
             const match = await bcrypt.compare(password, data.password);
             if (match) {
+                const token = jwt.sign({ _id: data._id, email: email, role: data.role }, 'tokenkey', { expiresIn: "1h" })
+                res.cookie("token", token)
                 console.log("login success");
                 return res.status(200).json({
                     success: true,
@@ -64,8 +83,8 @@ LoginRouter.post('/login', async (req, res) => {
 //     else{
 //         const details = await Registermodel(data).save()
 //     }
-   
-       
+
+
 //     } catch (error) {
 //         console.error(error.message);
 //         return res.status(500).json({
@@ -77,7 +96,7 @@ LoginRouter.post('/login', async (req, res) => {
 // });
 LoginRouter.post('/glogin', async (req, res) => {
     console.log(req.body, "gdtaa==");
-    const { email, name } = req.body;
+    const { email, name, picture } = req.body;
 
     try {
         // Ensure 'email' and 'name' are provided in the request body
@@ -95,26 +114,30 @@ LoginRouter.post('/glogin', async (req, res) => {
         let existingUser = await Registermodel.findOne({ email });
 
         if (!existingUser) {
-            
+
             const newUser = new Registermodel({
                 email,
                 name,
-                phone:"null",
-                password:"null",
-                cart:[],
-                wishlist:[],
+                phone: "null",
+                password: "null",
+                cart: [],
+                wishlist: [],
                 logintype: "google",
-                role:1,
-                status:"null"
+                role: 1,
+                status: "null"
             });
             existingUser = await newUser.save();
         }
-const details = await Registermodel.findOne({email})
+        const data = await Registermodel.findOne({ email });
+        const token = jwt.sign({ _id: data._id, email: email, role: data.role }, 'tokenkey', { expiresIn: "1h" })
+        res.cookie("token", token)
+        const details = await Registermodel.findOne({ email })
         return res.status(200).json({
             success: true,
             message: "User logged in or registered successfully.",
-            data: details ,
-         
+            data: details,
+            picture: picture,
+
         });
 
     } catch (error) {

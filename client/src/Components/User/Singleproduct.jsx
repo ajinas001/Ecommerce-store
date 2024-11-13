@@ -1,165 +1,182 @@
-import axios from 'axios'
-import React, { useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import Aos from 'aos';
+import 'aos/dist/aos.css';
+import { useNavigate } from 'react-router-dom';
+import { addToCart, fetchCart, removeFromCart, setInCart } from '../../Redux/CartSlice';
+import { useDispatch, useSelector } from 'react-redux';
 
 
 function Singleproduct() {
-
-    const [product, setProduct] = useState(null)
-    const userid = localStorage.getItem("id")
-
-    const addtocart = (id) => {
-        console.log(id);
-        axios.post('http://localhost:4005/user/addtocart', { userid: userid, id: id })
-            .then((res) => {
-                console.log(res);
-                toast.success("Added to cart");
-            })
-            .catch((error) => {
-                console.error(error);
-                toast.error("Failed to add to cart");
-            });
-    }
-    
+    const [products, setProducts] = useState([]);
+    // const [incart, setInCart] = useState({});
+    const userid = localStorage.getItem('id');
+    const navigate = useNavigate()
+    const dispatch = useDispatch()
+    const cart = useSelector((state) => state.cart.items);
+    const incart = useSelector((state) => state.cart.incart);
 
     useEffect(() => {
+        axios.get('http://localhost:4005/user/viewofferproduct')
+            .then((res) => {
+                console.log(res);
+                setProducts(res.data.data);
+                dispatch(fetchCart(userid));
+            })
+            .catch((err) => {
+                console.error('Error fetching products:', err);
+            });
+    }, [dispatch]);
 
-        axios.get('http://localhost:4005/user/viewofferproduct').then((res) => {
-            console.log(res);
-            setProduct(res.data.data)
-        })
-    }, [])
+    // useEffect(() => {
+
+    //     axios.post('http://localhost:4005/cart/viewcart', { userid: userid })
+    //         .then((res) => {
+    //             console.log(res);
+    //             const userData = res.data.data
+    //             console.log(userData, "userdata");
+    //             if (userData) {
+    //                 // Check if any item in userData has the same _id as the one you're interested in
+    //                 setInCart(userData.some(item => item._id === _id));
+    //                 console.log(incart, "incart");
+    //                 dispatch(fetchCart(userid));
+
+    //             }
+    //         })
+    //         .catch((err) => console.error("Error fetching user details:", err));
+
+    // }, [dispatch])
+    const handleAddToCart = (productId) => {
+        dispatch(addToCart({ userid, productId, quantity: 1 }))
+            .then(() => {
+                dispatch(setInCart({ productId, isInCart: true }));
+                toast.success('Added to cart');
+            })
+            .catch((error) => {
+                console.error('Failed to add to cart:', error);
+                toast.error('Failed to add to cart');
+            });
+    };
+    const handleRemoveFromCart = (productId) => {
+        dispatch(removeFromCart({ userid, productId }))
+            .then(() => {
+                dispatch(setInCart({ productId, isInCart: false }));
+                toast.success('Removed from cart');
+            })
+            .catch((error) => {
+                console.error('Failed to remove from cart:', error);
+                toast.error('Failed to remove from cart');
+            });
+    };
 
     const offerprice = (data) => {
         if (!data || !data.Price) {
-            return 0; // or any default value you prefer
+            return 0;
         }
-        
+
         const Price = parseInt(data.Price);
-        const Discount = parseInt(data.Discount || 0); // Default to 0 if Discount is not available or falsy
-    
+        const Discount = parseInt(data.Discount || 0);
+
         if (isNaN(Price)) {
-            return 0; // Return default value if Price is not a number
+            return 0;
         }
-    
+
         if (isNaN(Discount) || Discount === 0) {
-            return Price; // No discount, return original price
+            return Price;
         }
-    
-        const discountedPrice = Price - (Price * Discount / 100); // Calculate discounted price
-        return discountedPrice; // Return the result as a string with 2 decimal places
-    }
-    
-    
-    
+
+        const discountedPrice = Price - (Price * Discount / 100);
+        return discountedPrice.toFixed(0);
+    };
+
+    useEffect(() => {
+        Aos.init({ duration: 1500 });
+    }, []);
+
     return (
         <>
-            {product && product.map((data, key) => (
-                <div className="relative m-10 flex w-full max-w-xs flex-col overflow-hidden rounded-lg border border-gray-100 bg-white shadow-md">
-                    <a
-                        className="relative mx-3 mt-3 flex h-60 overflow-hidden rounded-xl"
-                        href={`/viewproductdetails/${data._id}`}
-                    >
-                        <img
-                            className="object-cover"
-                            src={`/uploadedimages/${data.images[0]}`}
-                        />
+            {products && products.map((data, key) => (
+                <div key={data._id} className="relative m-10 flex w-full max-w-xs flex-col overflow-hidden rounded-lg duration-500 hover:scale-105  bg-white " data-aos='fade-right'>
+                    <a className="relative mx-3 mt-3 flex h-60 overflow-hidden rounded-xl " href={`/viewproductdetails/${data._id}`}>
+                        <div className="relative w-full h-full">
+                            <img
+                                className="absolute inset-0 object-cover w-full h-full transition-opacity duration-300 opacity-100 hover:opacity-0"
+                                src={`/uploadedimages/${data.images[0]}`}
+                                alt=""
+                            />
+                            <img
+                                className="absolute inset-0 object-cover w-full h-full transition-opacity duration-300 opacity-0 hover:opacity-100"
+                                src={`/uploadedimages/${data.images[1]}`}
+                                alt=""
+                            />
+                        </div>
                         <span className="absolute top-0 left-0 m-2 rounded-full bg-black px-2 text-center text-sm font-medium text-white">
                             {data.Discount}% OFF
                         </span>
                     </a>
+
                     <div className="mt-4 px-5 pb-5">
-                        <a href="#">
-                            <h5 className="text-xl tracking-tight text-slate-900">
+                        <a href={`/viewproductdetails/${data._id}`}>
+                            <h5 className="text-xl tracking-tight text-slate-900 truncate w-44">
                                 {data.Name}
                             </h5>
                         </a>
                         <div className="mt-2 mb-5 flex items-center justify-between">
                             <p>
-                                <span className="text-2xl font-bold text-slate-900">INR {offerprice(data)}</span><br></br>
-                                <span className="text-sm text-slate-900 line-through ">INR {data.Price}</span>
+                                <span className="text-2xl font-bold text-slate-900">INR {offerprice(data)}</span><br />
+                                <span className="text-sm text-slate-900 line-through">INR {data.Price}</span>
                             </p>
-                            {/* <div className="flex items-center">
-             <svg
-                 aria-hidden="true"
-                 className="h-5 w-5 text-yellow-300"
-                 fill="currentColor"
-                 viewBox="0 0 20 20"
-                 xmlns="http://www.w3.org/2000/svg"
-             >
-                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-             </svg>
-             <svg
-                 aria-hidden="true"
-                 className="h-5 w-5 text-yellow-300"
-                 fill="currentColor"
-                 viewBox="0 0 20 20"
-                 xmlns="http://www.w3.org/2000/svg"
-             >
-                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-             </svg>
-             <svg
-                 aria-hidden="true"
-                 className="h-5 w-5 text-yellow-300"
-                 fill="currentColor"
-                 viewBox="0 0 20 20"
-                 xmlns="http://www.w3.org/2000/svg"
-             >
-                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-             </svg>
-             <svg
-                 aria-hidden="true"
-                 className="h-5 w-5 text-yellow-300"
-                 fill="currentColor"
-                 viewBox="0 0 20 20"
-                 xmlns="http://www.w3.org/2000/svg"
-             >
-                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-             </svg>
-             <svg
-                 aria-hidden="true"
-                 className="h-5 w-5 text-yellow-300"
-                 fill="currentColor"
-                 viewBox="0 0 20 20"
-                 xmlns="http://www.w3.org/2000/svg"
-             >
-                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-             </svg>
-             <span className="mr-2 ml-3 rounded bg-yellow-200 px-2.5 py-0.5 text-xs font-semibold">
-                 5.0
-             </span>
-         </div> */}
                         </div>
-                        <a
-                        onClick={()=>{addtocart(data._id)}}
-                            href="#"
-                            className="flex items-center justify-center rounded-md bg-slate-900 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-300"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="mr-2 h-6 w-6"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={2}
+                        {incart[data._id] ? (
+                            <button
+                                onClick={() => handleRemoveFromCart(data._id)}
+                                className="flex items-center justify-center rounded-md bg-slate-900 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-300"
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                                />
-                            </svg>
-                            Add to cart
-                        </a>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="mr-2 h-6 w-6"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                                    />
+                                </svg>
+                                Remove from cart
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => handleAddToCart(data._id)}
+                                className="flex items-center justify-center w-full rounded-md bg-slate-900 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="mr-2 h-6 w-6"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                                    />
+                                </svg>
+                                Add to cart
+                            </button>
+                        )}
                     </div>
                 </div>
             ))}
-
-
         </>
-    )
+    );
 }
 
-export default Singleproduct
+export default Singleproduct;

@@ -6,6 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import { Provider } from 'react-redux';
 import { store } from './Redux/Store';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { CartProvider } from './Components/context/CartContext';
 
 
 
@@ -15,7 +16,9 @@ root.render(
   <React.StrictMode>
     <GoogleOAuthProvider clientId="1030894416145-5alutckd6rirt2l3vq6ug99643rante7.apps.googleusercontent.com">
      <Provider store={store}>
+      <CartProvider>
     <App />
+    </CartProvider>
     </Provider>
     </GoogleOAuthProvider>
   </React.StrictMode>

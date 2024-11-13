@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState } from 'react'
-import Adminsidebar from './Adminsidebar'
 import Navbar from '../../Components/Navbar'
 import axios from 'axios'
 import { toast } from 'react-toastify'

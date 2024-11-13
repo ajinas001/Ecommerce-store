@@ -1,94 +1,99 @@
-import React, { useEffect, useRef, useState } from 'react'
-import Navbar from './Navbar'
-import { useNavigate } from 'react-router-dom'
-import Otpform from './Otpform'
-import { useDispatch, useSelector } from 'react-redux'
-import { handleData } from '../Redux/Register'
-import axios from 'axios'
-import bcrypt from 'bcryptjs'
-import { toast } from 'react-toastify'
+import React, { useEffect, useRef, useState } from 'react';
+import Navbar from './Navbar';
+import { useNavigate } from 'react-router-dom';
+import Otpform from './Otpform';
+import { useDispatch } from 'react-redux';
+import { handleData } from '../Redux/Register';
+import axios from 'axios';
+import bcrypt from 'bcryptjs';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useGoogleLogin } from '@react-oauth/google'
-
+import { useGoogleLogin } from '@react-oauth/google';
 
 function Register() {
 
-    const dispatch = useDispatch()
-    const navigate = useNavigate()
-    // const { data: registerdata } = useSelector((state) => state.register)
-    // console.log(registerdata);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
-    // const handleInputChange = (event) => {
-    //     const { name, value } = event.target;
-    //     dispatch(handleData({ name, value }));
-    // };
+    const [data, setData] = useState({});
+    const [loading, setLoading] = useState(false); // State for loading indicator
 
-    const [data,setdata] = useState()
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        setData({ ...data, [name]: value });
+    };
 
-    const handleInputChange = (event)=>{
-        const {name,value } = event.target
-        setdata({...data,[name]:value})
-    }
-console.log(data);
+    console.log(data);
+
     const handlesubmit = async (event) => {
         event.preventDefault();
-    
+        setLoading(true); // Set loading to true when the form is submitted
+
         try {
             const res = await axios.post('http://localhost:4005/register/send', data);
             console.log(res);
-            const details = data
+            const details = data;
             console.log("Details:", details);
             sessionStorage.setItem("email", details.email);
             console.log(res.data.message);
-            toast.success(res.data.message)
+            toast.success(res.data.message);
+            setLoading(false); // Set loading to false when data is fetched
             navigate('/verificationform');
         } catch (error) {
-            toast.error(error.response.data.message)
+            toast.error(error.response.data.message);
             console.error(error);
-            navigate('/')
+            setLoading(false); // Set loading to false on error
+            navigate('/');
         }
     };
 
-const [gdata,setgdata] = useState()
+    const [gdata, setGdata] = useState();
+
     const login = useGoogleLogin({
         onSuccess: async (response) => {
+            setLoading(true); // Set loading to true when Google login starts
             try {
                 const res = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
                     headers: {
                         Authorization: `Bearer ${response.access_token}`,
                     },
                 });
-                setgdata(res.data); // Update gdata
+                setGdata(res.data); // Update gdata
                 console.log(res);
                 // Check if res.data has the required data
                 if (res.data) {
                     axios.post("http://localhost:4005/login/glogin", res.data).then((res) => {
                         console.log(res);
-                        localStorage.setItem("email",res.data.data.email)
-                        localStorage.setItem("role",res.data.data.role)
+                        localStorage.setItem("email", res.data.data.email);
+                        localStorage.setItem("role", res.data.data.role);
+                        setLoading(false); // Set loading to false after Google login is complete
                         navigate("/userhome");
-                        window.location.reload()
+                        window.location.reload();
                     });
                 }
             } catch (error) {
                 console.log(error);
+                setLoading(false); // Set loading to false on error
             }
         },
     });
-    
-    
-    
-    
 
     const inputref = useRef(null);
+
     useEffect(() => {
         inputref.current && inputref.current.focus();
     }, []);
-
     return (
         <>
             <Navbar />
-            <section className="bg-white h-screen 2xl (1536px) xl (1280px) lg (1024px) md (768px) sm (640px) m-2">
+            {loading ? (
+                <div><div class='flex space-x-2 justify-center items-center bg-white h-screen dark:invert'>
+                    <span class='sr-only'>Loading...</span>
+                    <div class='h-8 w-8 bg-black rounded-full animate-bounce [animation-delay:-0.3s]'></div>
+                    <div class='h-8 w-8 bg-black rounded-full animate-bounce [animation-delay:-0.15s]'></div>
+                    <div class='h-8 w-8 bg-black rounded-full animate-bounce'></div>
+                </div></div>
+            ) : (<section className="bg-white h-screen 2xl (1536px) xl (1280px) lg (1024px) md (768px) sm (640px) m-2">
                 <div className="grid grid-cols-1 lg:grid-cols-2">
                     <div className="relative flex items-end px-4 pb-10 pt-60 sm:pb-16 md:justify-center lg:pb-24 bg-gray-50 sm:px-6 lg:px-8">
                         <div className="absolute inset-0">
@@ -159,7 +164,7 @@ const [gdata,setgdata] = useState()
                                     </div>
                                     <div className="w-3/12 max-w-full px-1 mr-auto flex-0">
                                         <a onClick={login} className="inline-block w-full px-6 py-3 mb-4 font-bold text-center text-gray-200 uppercase align-middle transition-all bg-transparent border border-gray-200 border-solid rounded-lg shadow-none cursor-pointer hover:scale-102 leading-pro text-xs ease-soft-in tracking-tight-soft bg-150 bg-x-25 hover:bg-transparent hover:opacity-75">
-                                           
+
                                             <svg
                                                 xmlnsXlink="http://www.w3.org/1999/xlink"
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -299,7 +304,8 @@ const [gdata,setgdata] = useState()
                         </div>
                     </div>
                 </div>
-            </section>
+            </section>)}
+
 
 
 

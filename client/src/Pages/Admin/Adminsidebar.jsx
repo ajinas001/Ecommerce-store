@@ -181,7 +181,8 @@ function Adminsidebar() {
                 </div>)} */}
 
 
-                <div className="fixed left-0 top-0 w-64 h-full bg-[#f8f4f3] p-4 z-50 sidebar-menu transition-transform sm:w-10">
+                <div className="fixed left-0 top-0 w-64 h-full bg-white p-4 z-50 sidebar-menu transition-transform sm:w-10 shadow-lg">
+                {/* <div className="fixed left-0 top-0 w-64 h-full bg-[#f8f4f3] p-4 z-50 sidebar-menu transition-transform sm:w-10"> */}
                 <div className="flex-shrink-0">
                                 <a href="#" title="" className="flex">
                                     <img
@@ -223,7 +224,7 @@ function Adminsidebar() {
                             <ul className={`pl-7 mt-2 ${usersDropdownOpen ? '' : 'hidden'}`}>
                                 <li className="mb-4">
                                     <a
-                                        href="#"
+                                        href='/adminallusersview'
                                         className="text-gray-900 text-sm flex items-center hover:text-[#f84525] before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3"
                                     >
                                         All
@@ -293,13 +294,13 @@ function Adminsidebar() {
                                 className="flex font-semibold items-center py-2 px-4 text-gray-900 hover:bg-gray-950 hover:text-gray-100 rounded-md group-[.active]:bg-gray-800 group-[.active]:text-white group-[.selected]:bg-gray-950 group-[.selected]:text-gray-100 sidebar-dropdown-toggle"
                             >
                                 <i className="bx bxl-blogger mr-3 text-lg" />
-                                <span className="text-sm">Post</span>
+                                <span className="text-sm">Orders</span>
                                 <i className={`ri-arrow-right-s-line ml-auto ${postDropdownOpen ? 'rotate-90' : ''}`} />
                             </a>
                             <ul className={`pl-7 mt-2 ${postDropdownOpen ? '' : 'hidden'}`}>
                                 <li className="mb-4">
                                     <a
-                                        href="#"
+                                        href="/adminallorders"
                                         className="text-gray-900 text-sm flex items-center hover:text-[#f84525] before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3"
                                     >
                                         All
@@ -315,9 +316,9 @@ function Adminsidebar() {
                                 </li>
                             </ul>
                         </li>
-                        <span className="text-gray-400 font-bold">BLOG</span>
+                        {/* <span className="text-gray-400 font-bold">BLOG</span>
                         <li className="mb-1 group">
-                            {/* Blog menu items */}
+                          
                             <a
                                 href="#"
                                 onClick={toggleMessagesDropdown}
@@ -328,10 +329,10 @@ function Adminsidebar() {
                                 <i className={`ri-arrow-right-s-line ml-auto ${messagesDropdownOpen ? 'rotate-90' : ''}`} />
                             </a>
                         </li>
-                        {/* <span className="text-gray-400 font-bold">PERSONAL</span> */}
+                       
                         <li className="mb-1 group">
-                            {/* Personal menu items */}
-                        </li>
+                          
+                        </li> */}
                         <span className="text-gray-400 font-bold">OTHER</span>
                         <li className="mb-1 group">
                             {/* Other menu items */}
